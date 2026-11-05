@@ -1,113 +1,88 @@
-# Prioritized development roadmap
+# Java microservices and React development roadmap
 
-This is an ordered backlog for roughly twelve weeks of regular development, not a promise that each milestone fits a calendar week. A daily session can include multiple complete changes and multiple commits. Larger items may take several sessions.
+This ordered backlog replaces the original prototype plan. Daily sessions may deliver several coherent commits; large items may span sessions. Checked items are implemented, not aspirations.
 
-## 1. Event acceptance foundation
+## 1. Java and frontend foundation
 
-- [x] Durable SQLite event ledger with schema-version checks.
-- [x] Idempotent acceptance and explicit conflict errors.
-- [x] CLI enqueue, show, and list with regression tests.
-- [x] Timestamped HMAC signing and receiver verification.
-- [ ] CI that runs the dependency-free suite on supported Python versions.
+- [x] Maven multi-module Java 21 / Spring Boot 4 project.
+- [x] Separately executable event-service, delivery-service, and reactive API gateway.
+- [x] Durable event acceptance and nested-payload idempotency.
+- [x] Transactional outbox with retryable authenticated service forwarding.
+- [x] Separate service data ownership and Flyway migrations.
+- [x] PostgreSQL profile and local H2 profile.
+- [x] Java HMAC signing and freshness verification.
+- [x] React/TypeScript dashboard using real event/job APIs.
+- [x] Java integration tests, frontend tests, and live cross-service smoke tests.
+- [x] Multi-stage Dockerfiles, Compose definition, and GitHub Actions workflow.
 
-Acceptance: local quickstart works, accepted events survive a restart, concurrent retries produce one event, and signature verification rejects tampering.
+## 2. Worker ownership and external delivery
 
-## 2. Worker ownership and crash recovery
+- [ ] Add versioned delivery-state and attempt-history migrations.
+- [ ] Implement atomic claims, lease expiry, and fencing tokens.
+- [ ] Introduce a transport interface and deterministic receiver fixtures.
+- [ ] Enforce resolved-address, redirect, payload-size, and timeout policies before outbound dispatch.
+- [ ] Attach event IDs and HMAC signatures to exact outgoing bytes.
+- [ ] Test competing workers, crashed workers, and duplicate external delivery.
 
-- [ ] Add a versioned migration for pending, in-flight, delivered, and dead-letter states.
-- [ ] Implement atomic claim and lease expiry.
-- [ ] Fence acknowledgements with claim tokens.
-- [ ] Test competing workers and recovery from expired leases.
+Acceptance: one active claim owns each attempt; old claims cannot acknowledge new ownership; a controlled receiver gets a verifiable payload.
 
-Acceptance: two workers do not own a valid lease simultaneously, and an old worker cannot acknowledge a reclaimed job.
+## 3. Retries and replay
 
-## 3. HTTP delivery
+- [ ] Classify transient and permanent failures.
+- [ ] Add bounded exponential backoff, jitter, and retry budgets.
+- [ ] Persist attempt outcomes and dead letters.
+- [ ] Implement authorized replay with an audit trail.
+- [ ] Add dashboard attempt details and retry states.
 
-- [ ] Add a transport interface and deterministic fake transport.
-- [ ] Implement bounded HTTP timeouts and response classification.
-- [ ] Enforce outbound network policy, resolved-IP checks, and redirect restrictions.
-- [ ] Send the event ID and signature on each attempt.
-- [ ] Exercise a local receiver in end-to-end tests.
+Acceptance: retries follow recorded schedules, terminal failures stop, and replay does not hide earlier attempts.
 
-Acceptance: one accepted event reaches a controlled receiver with verifiable bytes and headers; failures remain observable.
+## 4. Identity and workspace boundaries
 
-## 4. Retries and dead letters
+- [ ] Add Spring Security OAuth2/OIDC authentication at public boundaries.
+- [ ] Resolve workspace membership and permissions server-side.
+- [ ] Isolate event, job, endpoint, and replay access by workspace.
+- [ ] Add endpoint registration and signing-secret provisioning/rotation.
+- [ ] Test cross-workspace denial and expired sessions.
 
-- [ ] Implement bounded backoff with jitter and retry budgets.
-- [ ] Separate permanent failures from transient failures.
-- [ ] Add attempt history and safe dead-letter replay.
-- [ ] Test crash windows and duplicate delivery behavior.
+Acceptance: unauthorized callers cannot create or inspect protected resources.
 
-Acceptance: exhausted jobs stop retrying, retries follow the recorded schedule, and replay preserves an audit trail.
+## 5. API quality and frontend workflows
 
-## 5. Authenticated API
+- [ ] Publish a versioned OpenAPI specification and contract checks.
+- [ ] Generate or validate the TypeScript client against the contract.
+- [ ] Add cursor pagination, filters, and endpoint/job detail views.
+- [ ] Add accessible keyboard flows and end-to-end browser tests.
+- [ ] Improve loading, empty, and recoverable error states using observed failures.
 
-- [ ] Define an API contract and request-size limits.
-- [ ] Add authenticated event intake and idempotency headers.
-- [ ] Add event status and paginated attempt-history endpoints.
-- [ ] Add consistent validation and error responses.
+Acceptance: documented contracts and actual frontend requests stay aligned.
 
-Acceptance: unauthorized requests fail, valid events persist, and repeated requests honor the documented idempotency contract.
+## 6. Event-driven scale
 
-## 6. Endpoint and secret management
+- [ ] Measure forwarding throughput and queue lag.
+- [ ] Add claimed outbox batches for multi-replica efficiency.
+- [ ] Evaluate Kafka or a broker-backed relay against measured requirements.
+- [ ] Preserve consumer idempotency and schema compatibility if a broker is introduced.
+- [ ] Add outage/recovery and contract-evolution scenarios.
 
-- [ ] Add endpoint registration and workspace ownership.
-- [ ] Introduce signing-secret provisioning and rotation.
-- [ ] Redact secrets and sensitive payloads from diagnostics.
-- [ ] Test cross-workspace access denial.
+Acceptance: any infrastructure change has measured benefits and tested recovery semantics.
 
-Acceptance: one workspace cannot inspect or replay another workspace's events, and rotation supports a documented overlap window.
+## 7. Observability and resilience
 
-## 7. Dashboard foundation
+- [ ] Add OpenTelemetry tracing and Micrometer metrics for queue lag and attempts.
+- [ ] Propagate correlation IDs across gateway and services.
+- [ ] Add rate limiting and circuit breaking where measured failures justify it.
+- [ ] Redact payloads and secrets from logs.
+- [ ] Add an operations guide and actionable dashboards.
 
-- [ ] Build a React/TypeScript interface against the real API.
-- [ ] Add an event list with pending, delivered, and failed states.
-- [ ] Add event details and attempt history.
-- [ ] Include loading, empty, and actionable error states.
+Acceptance: a failed event can be traced across service boundaries without exposing sensitive data.
 
-Acceptance: the dashboard reflects actual persisted events and a failed delivery can be diagnosed.
+## 8. Deployment and portfolio release
 
-## 8. Operations and observability
+- [ ] Exercise container builds and PostgreSQL migrations in a clean environment.
+- [ ] Add backup, restore, retention, and migration-upgrade checks.
+- [ ] Add Kubernetes manifests when deployment requirements justify them.
+- [ ] Capture actual dashboard screenshots and a working failure/recovery demo.
+- [ ] Publish a case study with design tradeoffs and reproducible benchmarks.
+- [ ] Tag a release with verified quickstarts and known limitations.
 
-- [ ] Add health/readiness checks and correlation IDs.
-- [ ] Record queue age, attempt latency, success rate, and dead-letter count.
-- [ ] Add structured logs without payload or secret leakage.
-- [ ] Document operational troubleshooting.
-
-Acceptance: the project can explain why a known failed event did not arrive.
-
-## 9. Storage and deployment
-
-- [ ] Add a PostgreSQL persistence adapter with equivalent contract tests.
-- [ ] Add reproducible application containers and development Compose.
-- [ ] Add tested migrations, backup, and restore instructions.
-- [ ] Verify local and container quickstarts.
-
-Acceptance: a fresh checkout can start a working stack using documented commands.
-
-## 10. Quality and performance
-
-- [ ] Add reproducible load scenarios using synthetic payloads.
-- [ ] Measure throughput, latency, and queue recovery.
-- [ ] Fix measured bottlenecks and publish before/after results.
-- [ ] Add pagination and retention policies.
-
-Acceptance: performance claims have a workload, machine description, and reproducible command.
-
-## 11. Developer experience
-
-- [ ] Add a receiver example and language-neutral signing examples.
-- [ ] Add a guided local demo with realistic failure/recovery scenarios.
-- [ ] Improve keyboard navigation and accessibility.
-- [ ] Capture screenshots from the working product.
-
-Acceptance: another developer can complete the demo without undocumented manual steps.
-
-## 12. Portfolio release
-
-- [ ] Write a case study with tradeoffs, diagrams, and measured results.
-- [ ] Verify all README claims against running features.
-- [ ] Publish a tagged release and changelog.
-- [ ] Prioritize the next backlog from real defects and usability gaps.
-
-Acceptance: the project has a reproducible release, honest limitations, useful documentation, and an understandable commit history.
+Acceptance: another developer can start the stack, demonstrate its guarantees, and understand the remaining scope.

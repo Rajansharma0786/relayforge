@@ -1,0 +1,29 @@
+spring:
+  application:
+    name: event-service
+  profiles:
+    default: local
+  threads:
+    virtual:
+      enabled: true
+  mvc:
+    problemdetails:
+      enabled: true
+server:
+  address: ${SERVER_ADDRESS:127.0.0.1}
+  port: ${SERVER_PORT:8081}
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      probes:
+        enabled: true
+relayforge:
+  delivery-url: ${DELIVERY_SERVICE_URL:http://127.0.0.1:8082}
+  internal-token: ${INTERNAL_SERVICE_TOKEN:}
+  outbox:
+    enabled: ${OUTBOX_ENABLED:true}
+    delay-ms: ${OUTBOX_DELAY_MS:3000}

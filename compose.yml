@@ -1,0 +1,97 @@
+services:
+  events-db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: relayforge_events
+      POSTGRES_USER: relayforge
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD:-local-development-password}
+    volumes: [events-data:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U relayforge -d relayforge_events"]
+      interval: 5s
+      timeout: 3s
+      retries: 15
+
+  deliveries-db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: relayforge_deliveries
+      POSTGRES_USER: relayforge
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD:-local-development-password}
+    volumes: [deliveries-data:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U relayforge -d relayforge_deliveries"]
+      interval: 5s
+      timeout: 3s
+      retries: 15
+
+  delivery-service:
+    build:
+      context: .
+      args: { SERVICE: delivery-service }
+    environment:
+      SERVER_ADDRESS: 0.0.0.0
+      SERVER_PORT: 8082
+      SPRING_PROFILES_ACTIVE: postgres
+      DATABASE_URL: jdbc:postgresql://deliveries-db:5432/relayforge_deliveries
+      DATABASE_USER: relayforge
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD:-local-development-password}
+      INTERNAL_SERVICE_TOKEN: ${INTERNAL_SERVICE_TOKEN:-local-development-token}
+    depends_on:
+      deliveries-db: { condition: service_healthy }
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8082/actuator/health/readiness"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  event-service:
+    build:
+      context: .
+      args: { SERVICE: event-service }
+    environment:
+      SERVER_ADDRESS: 0.0.0.0
+      SERVER_PORT: 8081
+      SPRING_PROFILES_ACTIVE: postgres
+      DATABASE_URL: jdbc:postgresql://events-db:5432/relayforge_events
+      DATABASE_USER: relayforge
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD:-local-development-password}
+      DELIVERY_SERVICE_URL: http://delivery-service:8082
+      INTERNAL_SERVICE_TOKEN: ${INTERNAL_SERVICE_TOKEN:-local-development-token}
+    depends_on:
+      events-db: { condition: service_healthy }
+      delivery-service: { condition: service_healthy }
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8081/actuator/health/readiness"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  api-gateway:
+    build:
+      context: .
+      args: { SERVICE: api-gateway }
+    environment:
+      SERVER_ADDRESS: 0.0.0.0
+      SERVER_PORT: 8080
+      EVENT_SERVICE_URL: http://event-service:8081
+      DELIVERY_SERVICE_URL: http://delivery-service:8082
+    ports: ["127.0.0.1:8080:8080"]
+    depends_on:
+      event-service: { condition: service_healthy }
+      delivery-service: { condition: service_healthy }
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/actuator/health/readiness"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  dashboard:
+    build: ./frontend
+    ports: ["127.0.0.1:5173:80"]
+    depends_on:
+      api-gateway: { condition: service_healthy }
+
+volumes:
+  events-data:
+  deliveries-data:

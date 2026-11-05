@@ -1,0 +1,8 @@
+.git
+**/target
+**/node_modules
+**/dist
+**/data
+**/__pycache__
+.smoke-logs
+.env

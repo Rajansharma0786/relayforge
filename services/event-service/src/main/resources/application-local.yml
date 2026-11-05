@@ -1,0 +1,7 @@
+spring:
+  datasource:
+    url: jdbc:h2:file:./data/events;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE
+    username: sa
+    password: ""
+relayforge:
+  internal-token: ${INTERNAL_SERVICE_TOKEN:local-development-token}

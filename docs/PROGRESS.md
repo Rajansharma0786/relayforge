@@ -1,25 +1,37 @@
-# Progress log
+# Development progress
 
-## 2026-11-05 — New project foundation
+## 2026-11-05 — Java Spring Boot microservices and React migration
 
-AI-assisted development with Codex.
+AI-assisted implementation with Codex, following the owner's requested stack.
 
-### Durable event acceptance
+### Backend
 
-Implemented the SQLite event ledger, transaction-backed idempotency, input validation, schema version checks, and a CLI for accepting and inspecting events.
+Replaced the prototype runtime with Java 21 / Spring Boot 4.1.2. Added three independently executable applications: event-service, delivery-service, and Spring Cloud Gateway. Implemented event validation and idempotency, atomic event/outbox persistence, HTTP forwarding with backoff, internal service-token checks, and an independently stored delivery queue.
 
-Validation: 16 automated tests passed, covering persistent reopen, duplicate and conflicting keys, 24 concurrent submissions through eight connections, invalid inputs, and CLI subprocess flows.
+Each stateful service owns its Flyway schema. Local development uses separate H2 files; PostgreSQL is configured through environment-based profiles. The Java signature module retains the v1 signing contract.
 
-Current scope: events are stored as pending. No outbound HTTP requests, worker leases, retry scheduling, authentication, or dashboard are implemented.
+### Frontend
 
-Next: add timestamped signing and tamper/replay-window verification, then CI and leased workers.
+Added a React 19 / TypeScript 7 dashboard with TanStack Query, actual event and job listings, a validated event-creation form, idempotency replay feedback, automatic refresh, and service-error states. Added a committed lockfile and production build.
 
-### Timestamped payload signatures
+### Validation completed
 
-Implemented exact-byte HMAC-SHA256 signing, a strict v1 signature header, constant-time digest comparison, and configurable freshness validation. Documented why receiver event-ID deduplication is still required.
+- Maven verify: 21 Java tests passed across all three modules.
+- Vitest: 7 frontend tests passed.
+- TypeScript checking and Vite production build passed.
+- Live smoke test against three packaged Java applications passed with H2.
+- Live smoke test against three packaged Java applications passed with PostgreSQL 16.13; temporary test databases were removed.
+- Docker Compose configuration validation passed.
+- GitHub Actions defines Java/frontend checks plus H2 and PostgreSQL 17 smoke tests.
 
-Validation: 13 new signing tests passed; the complete suite reports 29 passed on Python 3.14.3. A fixed signature test vector was independently generated with OpenSSL. The suite covers tampering, wrong secrets, changed timestamps, freshness boundaries, malformed headers, and configuration failures. Other supported Python versions await the CI milestone.
+The local Docker daemon could not be accessed in this sandbox, so container images and the Compose runtime were not started locally. The supplied image definitions remain to be exercised in a clean Docker environment.
 
-Two coherent implementation commits were prepared in this initial session. No outbound delivery or hosted deployment was performed.
+### Current limits and next work
 
-Next: add CI across supported Python versions, then a tested schema migration and worker leases.
+PENDING delivery jobs have not been sent to their external destinations. Outbound workers, fenced leases, external retry/dead-letter behavior, OAuth2/OIDC workspace security, and distributed tracing remain planned.
+
+Next: implement a tested delivery-state migration and worker leases, then controlled external delivery.
+
+## Earlier prototype history
+
+Two initial prototype commits implemented event persistence and signature primitives before the owner requested Java/Spring Boot and React/TypeScript. Those commits remain in Git history. Their source files, runtime metadata, test suite, and run instructions have been replaced; their historical test counts do not describe the current application.
