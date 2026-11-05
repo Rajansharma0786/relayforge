@@ -20,7 +20,11 @@ Use one EventStore instance per thread or process. Separate connections share th
 
 Schema version 1 intentionally permits only pending events. Future delivery states require a tested migration. The store rejects a higher schema version rather than guessing how to interpret it.
 
-## Target system
+## Implemented signing primitive
+
+The signing module authenticates timestamp-and-body bytes using HMAC-SHA256 and compares digests with hmac.compare_digest. It validates a strict versioned header and a bounded freshness window. It has no network or persistence side effects. See the [signature contract](SIGNATURES.md) for exact bytes, receiver requirements, and replay limitations. Integrating these primitives into delivery workers is future work.
+
+## Target system design
 
 ```mermaid
 flowchart LR

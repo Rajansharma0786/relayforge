@@ -7,7 +7,7 @@ This is an ordered backlog for roughly twelve weeks of regular development, not 
 - [x] Durable SQLite event ledger with schema-version checks.
 - [x] Idempotent acceptance and explicit conflict errors.
 - [x] CLI enqueue, show, and list with regression tests.
-- [ ] Timestamped HMAC signing and receiver verification.
+- [x] Timestamped HMAC signing and receiver verification.
 - [ ] CI that runs the dependency-free suite on supported Python versions.
 
 Acceptance: local quickstart works, accepted events survive a restart, concurrent retries produce one event, and signature verification rejects tampering.

@@ -12,6 +12,7 @@ RelayForge will help applications accept events, deliver signed webhooks, recove
 - Accept concurrent submissions safely through a database uniqueness constraint.
 - Inspect accepted events from the CLI.
 - Validate event types, destinations, JSON payloads, and list limits.
+- Sign exact payload bytes and verify timestamped HMAC-SHA256 signatures.
 
 Events currently remain `pending`. This version does not send network requests. Delivery workers, retry scheduling, an HTTP API, and a dashboard are planned.
 
@@ -44,6 +45,7 @@ Use `python3 -m relayforge --db demo.db show EVENT_ID` to inspect one event. Dat
 The target platform adds an authenticated event API, leased workers, bounded retries, dead-letter replay, signed requests, delivery history, a React dashboard, and deployment documentation. Features are marked complete only after implementation and verification.
 
 - [Architecture and design decisions](docs/ARCHITECTURE.md)
+- [Signing contract and receiver example](docs/SIGNATURES.md)
 - [Prioritized roadmap](docs/ROADMAP.md)
 - [Daily development process](docs/DEVELOPMENT.md)
 - [Actual progress and validation](docs/PROGRESS.md)
@@ -54,6 +56,7 @@ The target platform adds an authenticated event API, leased workers, bounded ret
 src/relayforge/
   __main__.py       Local demonstration CLI
   store.py          Durable event acceptance and idempotency
+  signing.py        Timestamped HMAC signing and freshness checks
 tests/              Behavioral and CLI integration tests
 docs/               Architecture, roadmap, workflow, and progress
 ```
