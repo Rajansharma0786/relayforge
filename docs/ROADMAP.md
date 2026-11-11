@@ -17,7 +17,7 @@ This ordered backlog replaces the original prototype plan. Daily sessions may de
 
 ## 2. Worker ownership and external delivery
 
-- [ ] Add versioned delivery-state and attempt-history migrations.
+- [x] Add versioned delivery-state and attempt-history migrations.
 - [ ] Implement atomic claims, lease expiry, and fencing tokens.
 - [ ] Introduce a transport interface and deterministic receiver fixtures.
 - [ ] Enforce resolved-address, redirect, payload-size, and timeout policies before outbound dispatch.

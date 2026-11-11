@@ -44,7 +44,9 @@ Public event/read APIs currently target a loopback development environment. OIDC
 
 ## Current queue semantics
 
-A delivery job in PENDING has been accepted by the delivery service. It has not reached its destination. Java signing primitives are implemented and tested but are not yet attached to outgoing requests. External dispatch, attempts, dead letters, and replay belong to the next milestones.
+A delivery job in PENDING has been accepted by the delivery service. The V2 migration backfills existing jobs as immediately eligible and adds attempt numbers, lease expiry, and delivery attempt history. It indexes pending jobs by due time and in-progress jobs by lease expiry. Each attempt number is unique within its job.
+
+Worker claims and external HTTP delivery are the next milestones. The current service queues jobs in PENDING.
 
 ## Frontend boundary
 

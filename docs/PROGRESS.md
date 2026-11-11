@@ -1,5 +1,13 @@
 # Development progress
 
+## 2026-11-11 — Delivery queue state and attempt history
+
+AI-assisted implementation with Codex. The V2 Flyway migration preserves existing delivery jobs and prepares the queue for worker claims. It adds retry scheduling, lease expiry, and a history table keyed by job and attempt number. The intake API still accepts new jobs in PENDING.
+
+Validation passed: 23 Java tests, including two schema tests for upgrading an existing H2 database and enforcing attempt constraints. A PostgreSQL 16 V1-to-V2 upgrade preserved a seeded pending job. Live three-service smoke tests passed with H2 and PostgreSQL. The 7 frontend tests, formatting check, and production build passed.
+
+Next: implement atomic claims and use the attempt number to prevent an expired worker from completing a newer claim.
+
 ## 2026-11-05 — Java Spring Boot microservices and React migration
 
 AI-assisted implementation with Codex, following the owner's requested stack.
