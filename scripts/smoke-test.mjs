@@ -77,16 +77,23 @@ try {
   const blocked = await fetch(base + "/internal/deliveries", { method: "POST", body: "{}" });
   assert.equal(blocked.status, 404);
   let deliveredToQueue = false;
+  let eventStatus;
   for (let attempt = 0; attempt < 40; attempt++) {
     const response = await fetch(base + "/api/deliveries");
     assert.equal(response.status, 200);
     const jobs = await response.json();
-    if (jobs.length === 1 && jobs[0].eventId === event.id) { deliveredToQueue = true; break; }
+    deliveredToQueue = jobs.length === 1 && jobs[0].eventId === event.id;
+    if (deliveredToQueue) {
+      // The delivery service can commit before the event service records its acknowledgement.
+      const eventResponse = await fetch(base + "/api/events/" + event.id);
+      assert.equal(eventResponse.status, 200);
+      eventStatus = (await eventResponse.json()).status;
+      if (eventStatus === "FORWARDED") break;
+    }
     await delay(250);
   }
   assert.equal(deliveredToQueue, true, "Outbox must reach the real delivery service");
-  const finalEvent = await (await fetch(base + "/api/events/" + event.id)).json();
-  assert.equal(finalEvent.status, "FORWARDED");
+  assert.equal(eventStatus, "FORWARDED", "Event service must record the delivery acknowledgement");
   console.log(`PASS (${postgres ? "PostgreSQL" : "H2"}): three live Java services; durable intake, idempotent replay, conflict, gateway isolation, and outbox forwarding.`);
 } finally {
   for (const process of processes) process.kill("SIGTERM");
